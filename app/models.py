@@ -1,6 +1,6 @@
 # app/models.py
 from pydantic import BaseModel, Field
-from typing import List, Literal, Dict, Optional, Tuple
+from typing import List, Literal, Dict, Optional
 
 
 class LatLon(BaseModel):
@@ -10,6 +10,8 @@ class LatLon(BaseModel):
 
 AlgorithmName = Literal["bfs", "dfs", "ucs", "iddfs", "astar"]
 
+
+# --------- NEAREST NODE ---------
 
 class NearestNodeRequest(BaseModel):
     lat: float
@@ -30,7 +32,9 @@ class NearestNodeResult(BaseModel):
 
 class NearestNodeBatchRequest(BaseModel):
     points: List[LatLon]
-    methods: List[Literal["kd", "bruteforce"]] = Field(default_factory=lambda: ["kd"])
+    methods: List[Literal["kd", "bruteforce"]] = Field(
+        default_factory=lambda: ["kd", "bruteforce"]
+    )
 
 
 class NearestNodeBatchResultItem(BaseModel):
@@ -44,6 +48,8 @@ class NearestNodeBatchResponse(BaseModel):
     results: List[NearestNodeBatchResultItem]
     summary: Dict[str, Dict[str, float]]
 
+
+# --------- ROUTES ---------
 
 class RouteRequest(BaseModel):
     origin: LatLon
@@ -94,13 +100,20 @@ class RouteCompareResponse(BaseModel):
     results: List[RouteCompareResult]
 
 
-class ServiceType(BaseModel):
-    type: Literal["gas_station", "tire", "workshop"]
+# --------- DEMO TRIPS ---------
 
+class DemoTrip(BaseModel):
+    id: str
+    client_name: str
+    pickup: LatLon
+    destination: LatLon
+
+
+# --------- SERVICES / VORONOI ---------
 
 class ServiceInfo(BaseModel):
     id: str
-    type: str
+    type: Literal["gas_station", "tire", "workshop"]
     name: str
     lat: float
     lon: float
@@ -118,3 +131,15 @@ class ServiceRouteResponse(BaseModel):
     location_node: int
     service: ServiceInfo
     route: RouteResponse
+
+
+# Para /api/voronoi/regions (GeoJSON simplificado)
+class VoronoiFeature(BaseModel):
+    type: Literal["Feature"] = "Feature"
+    properties: Dict[str, str]
+    geometry: Dict[str, object]
+
+
+class VoronoiFeatureCollection(BaseModel):
+    type: Literal["FeatureCollection"] = "FeatureCollection"
+    features: List[VoronoiFeature]
