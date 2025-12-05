@@ -13,7 +13,6 @@ from app.services.voronoi_loader import load_services_voronoi
 
 router = APIRouter(tags=["services"])
 
-
 ServiceType = Literal["gas_station", "tire_shop", "workshop", "any"]
 
 
@@ -48,6 +47,7 @@ class RouteCoord(BaseModel):
     lat: float
     lon: float
 
+
 class ServiceVoronoiCell(BaseModel):
     id: str
     osm_id: int
@@ -63,17 +63,16 @@ class ServicesVoronoiResponse(BaseModel):
     cells: List[ServiceVoronoiCell]
 
 
-
-class EmergencyRouteServiceInfo(ServiceBase):
-    distanceKm: float
-    estimatedTimeMin: float
-
-
-class EmergencyRouteResponse(BaseModel):
-    service: EmergencyRouteServiceInfo
+class EmergencyRouteSimpleResponse(BaseModel):
+    """
+    Shape que espera el frontend para rutas de emergencia.
+    NO incluye info detallada del servicio, sólo la ruta.
+    """
     algorithm: str
     cost_metric: str
     found: bool
+    origin_node: int
+    destination_node: int
     distance_m: float
     travel_time_s: float
     time_ms: float
@@ -129,12 +128,13 @@ def _compute_route_metrics(
     travel_time_s = metrics["travel_time_s"]
 
     return {
-        "origin_node": driver_node,
-        "destination_node": service_node,
+        "origin_node": int(driver_node),
+        "destination_node": int(service_node),
         "search": search_res,
-        "distance_m": distance_m,
-        "travel_time_s": travel_time_s,
+        "distance_m": float(distance_m),
+        "travel_time_s": float(travel_time_s),
     }
+
 
 def _point_in_polygon(lat: float, lon: float, polygon: List[Dict[str, float]]) -> bool:
     """
@@ -234,11 +234,15 @@ def get_services_nearby(
     return ServicesNearbyResponse(services=results)
 
 
-@router.post("/emergency/nearest-service-route", response_model=EmergencyRouteResponse)
+@router.post(
+    "/emergency/nearest-service-route",
+    response_model=EmergencyRouteSimpleResponse,
+)
 def emergency_nearest_service_route(req: EmergencyRouteRequest):
     """
     Dada una posición en el mapa, determina el servicio más cercano según tipo,
-    y regresa la ruta óptima (A* + 'time') hacia ese servicio.
+    y regresa SOLO la ruta óptima (A* + 'time') hacia ese servicio
+    en el formato que espera el frontend.
     """
     all_services = load_osm_services()
     candidates = _filter_services(all_services, req.service_type)
@@ -283,13 +287,12 @@ def emergency_nearest_service_route(req: EmergencyRouteRequest):
             detail="No se pudo encontrar ruta a ningún servicio.",
         )
 
-    svc = best["svc"]
     route_info = best["route_info"]
 
     # Construimos path_coords igual que en /api/route
     G, _ = load_graph()
-    path_nodes = route_info["search"]["path_nodes"]
-    path_coords = []
+    path_nodes = [int(n) for n in route_info["search"]["path_nodes"]]
+    path_coords: List[RouteCoord] = []
     for node_id in path_nodes:
         data = G.nodes[node_id]
         path_coords.append(
@@ -299,32 +302,21 @@ def emergency_nearest_service_route(req: EmergencyRouteRequest):
             )
         )
 
-    svc_info = EmergencyRouteServiceInfo(
-        id=str(svc["id"]),
-        osm_id=int(svc["osm_id"]),
-        osm_type=str(svc["osm_type"]),
-        type=svc["type"],
-        name=svc["name"],
-        lat=float(svc["lat"]),
-        lon=float(svc["lon"]),
-        is24h=bool(svc.get("is24h", False)),
-        hasTowing=bool(svc.get("hasTowing", False)),
-        areaLabel=svc.get("areaLabel"),
-        distanceKm=best["distance_km"],
-        estimatedTimeMin=best["duration_min"],
-    )
+    search_data = route_info["search"]
 
-    return EmergencyRouteResponse(
-        service=svc_info,
-        algorithm="astar",
-        cost_metric="time",
-        found=True,
-        distance_m=route_info["distance_m"],
-        travel_time_s=route_info["travel_time_s"],
-        time_ms=route_info["search"]["time_ms"],
+    return EmergencyRouteSimpleResponse(
+        algorithm=str(search_data.get("algorithm", "astar")),
+        cost_metric=str(search_data.get("cost_metric", "time")),
+        found=bool(search_data.get("found", True)),
+        origin_node=int(route_info["origin_node"]),
+        destination_node=int(route_info["destination_node"]),
+        distance_m=float(route_info["distance_m"]),
+        travel_time_s=float(route_info["travel_time_s"]),
+        time_ms=float(search_data.get("time_ms", 0.0)),
         path_nodes=path_nodes,
         path_coords=path_coords,
     )
+
 
 @router.get("/services/voronoi", response_model=ServicesVoronoiResponse)
 def get_services_voronoi(
@@ -362,16 +354,14 @@ def get_services_voronoi(
 
 @router.post(
     "/emergency/nearest-service-voronoi",
-    response_model=EmergencyRouteResponse,
+    response_model=EmergencyRouteSimpleResponse,
 )
 def emergency_nearest_service_voronoi(req: EmergencyRouteRequest):
     """
     Variante del servicio de emergencia que:
       1) Usa la partición de Voronoi para decidir qué servicio "posee" el punto.
       2) Calcula la ruta óptima (A* + 'time') hacia ese servicio.
-
-    Si el punto cae fuera de todas las celdas (por regiones infinitas o precisión),
-    se hace fallback al comportamiento de /emergency/nearest-service-route.
+      3) Responde en el mismo formato que /emergency/nearest-service-route.
     """
     all_cells = load_services_voronoi()
 
@@ -400,8 +390,6 @@ def emergency_nearest_service_voronoi(req: EmergencyRouteRequest):
 
     # Fallback: si no caímos en ninguna celda, usamos la lógica anterior
     if chosen_cell is None:
-        # Reusamos la lógica de emergency_nearest_service_route
-        # pero llamándola internamente sería más limpio; aquí la replicamos rápido:
         all_services = load_osm_services()
         candidates = _filter_services(all_services, req.service_type)
 
@@ -469,20 +457,10 @@ def emergency_nearest_service_voronoi(req: EmergencyRouteRequest):
                 detail="No se pudo calcular ruta al servicio elegido por Voronoi.",
             )
 
-        distance_km = route_info["distance_m"] / 1000.0
-        duration_min = route_info["travel_time_s"] / 60.0
-
-        best = {
-            "svc": svc,
-            "route_info": route_info,
-            "distance_km": distance_km,
-            "duration_min": duration_min,
-        }
-
-    # Armamos respuesta (igual que en emergency_nearest_service_route)
+    # Armamos respuesta igual que en /emergency/nearest-service-route
     G, _ = load_graph()
-    path_nodes = route_info["search"]["path_nodes"]
-    path_coords = []
+    path_nodes = [int(n) for n in route_info["search"]["path_nodes"]]
+    path_coords: List[RouteCoord] = []
     for node_id in path_nodes:
         data = G.nodes[node_id]
         path_coords.append(
@@ -492,29 +470,17 @@ def emergency_nearest_service_voronoi(req: EmergencyRouteRequest):
             )
         )
 
-    svc_info = EmergencyRouteServiceInfo(
-        id=str(svc["id"]),
-        osm_id=int(svc["osm_id"]),
-        osm_type=str(svc["osm_type"]),
-        type=svc["type"],
-        name=svc["name"],
-        lat=float(svc["lat"]),
-        lon=float(svc["lon"]),
-        is24h=bool(svc.get("is24h", False)),
-        hasTowing=bool(svc.get("hasTowing", False)),
-        areaLabel=svc.get("areaLabel"),
-        distanceKm=best["distance_km"],
-        estimatedTimeMin=best["duration_min"],
-    )
+    search_data = route_info["search"]
 
-    return EmergencyRouteResponse(
-        service=svc_info,
-        algorithm="astar",
-        cost_metric="time",
-        found=True,
-        distance_m=route_info["distance_m"],
-        travel_time_s=route_info["travel_time_s"],
-        time_ms=route_info["search"]["time_ms"],
+    return EmergencyRouteSimpleResponse(
+        algorithm=str(search_data.get("algorithm", "astar")),
+        cost_metric=str(search_data.get("cost_metric", "time")),
+        found=bool(search_data.get("found", True)),
+        origin_node=int(route_info["origin_node"]),
+        destination_node=int(route_info["destination_node"]),
+        distance_m=float(route_info["distance_m"]),
+        travel_time_s=float(route_info["travel_time_s"]),
+        time_ms=float(search_data.get("time_ms", 0.0)),
         path_nodes=path_nodes,
         path_coords=path_coords,
     )
