@@ -1,6 +1,5 @@
 # fetch_osm_services.py
 import json
-import time
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -50,24 +49,27 @@ def build_overpass_query(lat: float, lon: float, radius_m: int) -> str:
     """
     Construye la consulta Overpass usando 'around' para el radio dado.
     Extrae:
-      - amenity=fuel      -> gas_station
-      - shop=tyres        -> tire_shop
-      - amenity=car_repair -> workshop
+      - amenity=fuel       -> gas_station
+      - shop=tyres         -> tire_shop
+      - shop=car_repair    -> workshop
     """
     query = f"""
 [out:json][timeout:90];
 (
+  // Gasolineras
   node["amenity"="fuel"](around:{radius_m},{lat},{lon});
   way["amenity"="fuel"](around:{radius_m},{lat},{lon});
   relation["amenity"="fuel"](around:{radius_m},{lat},{lon});
 
+  // Llanteras
   node["shop"="tyres"](around:{radius_m},{lat},{lon});
   way["shop"="tyres"](around:{radius_m},{lat},{lon});
   relation["shop"="tyres"](around:{radius_m},{lat},{lon});
 
-  node["amenity"="car_repair"](around:{radius_m},{lat},{lon});
-  way["amenity"="car_repair"](around:{radius_m},{lat},{lon});
-  relation["amenity"="car_repair"](around:{radius_m},{lat},{lon});
+  // Talleres mecánicos
+  node["shop"="car_repair"](around:{radius_m},{lat},{lon});
+  way["shop"="car_repair"](around:{radius_m},{lat},{lon});
+  relation["shop"="car_repair"](around:{radius_m},{lat},{lon});
 );
 out center;
 """
@@ -77,6 +79,11 @@ out center;
 def infer_service_type(tags: Dict[str, Any]) -> str:
     """
     A partir de los tags de OSM, determina si es gas_station, tire_shop o workshop.
+
+    - amenity=fuel       -> gas_station
+    - shop=tyres         -> tire_shop
+    - shop=car_repair    -> workshop
+    (soportamos también amenity=car_repair por si alguien lo usa así)
     """
     amenity = tags.get("amenity")
     shop = tags.get("shop")
@@ -85,10 +92,10 @@ def infer_service_type(tags: Dict[str, Any]) -> str:
         return "gas_station"
     if shop == "tyres":
         return "tire_shop"
-    if amenity == "car_repair":
+    if shop == "car_repair" or amenity == "car_repair":
         return "workshop"
 
-    # Fallback: si llega otro tipo raro
+    # Fallback: si llega otro tipo raro, lo tratamos como taller genérico
     return "workshop"
 
 

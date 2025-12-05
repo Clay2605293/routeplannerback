@@ -36,6 +36,18 @@
     "areaLabel": "Guadalajara metro area"
   },
   {
+    "id": "osm_node_1504274254",
+    "osm_id": 1504274254,
+    "osm_type": "node",
+    "type": "workshop",
+    "name": "Servicio Country",
+    "lat": 20.700172,
+    "lon": -103.3747872,
+    "is24h": false,
+    "hasTowing": false,
+    "areaLabel": "Guadalajara metro area"
+  },
+  {
     "id": "osm_node_2606495826",
     "osm_id": 2606495826,
     "osm_type": "node",
@@ -120,6 +132,18 @@
     "areaLabel": "Guadalajara metro area"
   },
   {
+    "id": "osm_node_4343150800",
+    "osm_id": 4343150800,
+    "osm_type": "node",
+    "type": "workshop",
+    "name": "Wagen Motors - taller mecánico",
+    "lat": 20.6910115,
+    "lon": -103.3715521,
+    "is24h": false,
+    "hasTowing": false,
+    "areaLabel": "Guadalajara metro area"
+  },
+  {
     "id": "osm_node_4613112649",
     "osm_id": 4613112649,
     "osm_type": "node",
@@ -127,6 +151,54 @@
     "name": "Pemex",
     "lat": 20.7765685,
     "lon": -103.4566844,
+    "is24h": false,
+    "hasTowing": false,
+    "areaLabel": "Guadalajara metro area"
+  },
+  {
+    "id": "osm_node_4675115589",
+    "osm_id": 4675115589,
+    "osm_type": "node",
+    "type": "workshop",
+    "name": "Country Service Center",
+    "lat": 20.711548,
+    "lon": -103.3698328,
+    "is24h": false,
+    "hasTowing": false,
+    "areaLabel": "Guadalajara metro area"
+  },
+  {
+    "id": "osm_node_4698470590",
+    "osm_id": 4698470590,
+    "osm_type": "node",
+    "type": "workshop",
+    "name": "Midas",
+    "lat": 20.6843643,
+    "lon": -103.3805799,
+    "is24h": false,
+    "hasTowing": false,
+    "areaLabel": "Guadalajara metro area"
+  },
+  {
+    "id": "osm_node_5635948201",
+    "osm_id": 5635948201,
+    "osm_type": "node",
+    "type": "workshop",
+    "name": "AutoFinish Professional",
+    "lat": 20.6789177,
+    "lon": -103.4182832,
+    "is24h": false,
+    "hasTowing": false,
+    "areaLabel": "Guadalajara metro area"
+  },
+  {
+    "id": "osm_node_6139559650",
+    "osm_id": 6139559650,
+    "osm_type": "node",
+    "type": "workshop",
+    "name": "Servicio Autoeléctrico Gallo",
+    "lat": 20.6526491,
+    "lon": -103.4387213,
     "is24h": false,
     "hasTowing": false,
     "areaLabel": "Guadalajara metro area"
@@ -223,6 +295,18 @@
     "name": "PetroSeven",
     "lat": 20.7241525,
     "lon": -103.5021635,
+    "is24h": false,
+    "hasTowing": false,
+    "areaLabel": "Guadalajara metro area"
+  },
+  {
+    "id": "osm_node_11293762070",
+    "osm_id": 11293762070,
+    "osm_type": "node",
+    "type": "workshop",
+    "name": "Alkasa Llantas",
+    "lat": 20.7317387,
+    "lon": -103.3856687,
     "is24h": false,
     "hasTowing": false,
     "areaLabel": "Guadalajara metro area"
@@ -427,6 +511,18 @@
     "name": "Unnamed service",
     "lat": 20.7290375,
     "lon": -103.5404824,
+    "is24h": false,
+    "hasTowing": false,
+    "areaLabel": "Guadalajara metro area"
+  },
+  {
+    "id": "osm_way_623291166",
+    "osm_id": 623291166,
+    "osm_type": "way",
+    "type": "workshop",
+    "name": "Leo Multiservicios",
+    "lat": 20.6625194,
+    "lon": -103.4557375,
     "is24h": false,
     "hasTowing": false,
     "areaLabel": "Guadalajara metro area"
@@ -1327,6 +1423,54 @@
     "name": "Unnamed service",
     "lat": 20.6554499,
     "lon": -103.4159582,
+    "is24h": false,
+    "hasTowing": false,
+    "areaLabel": "Guadalajara metro area"
+  },
+  {
+    "id": "osm_way_1409316864",
+    "osm_id": 1409316864,
+    "osm_type": "way",
+    "type": "workshop",
+    "name": "Unnamed service",
+    "lat": 20.6540056,
+    "lon": -103.4146063,
+    "is24h": false,
+    "hasTowing": false,
+    "areaLabel": "Guadalajara metro area"
+  },
+  {
+    "id": "osm_way_1409650386",
+    "osm_id": 1409650386,
+    "osm_type": "way",
+    "type": "workshop",
+    "name": "Unnamed service",
+    "lat": 20.6555695,
+    "lon": -103.4165613,
+    "is24h": false,
+    "hasTowing": false,
+    "areaLabel": "Guadalajara metro area"
+  },
+  {
+    "id": "osm_way_1409650412",
+    "osm_id": 1409650412,
+    "osm_type": "way",
+    "type": "workshop",
+    "name": "Unnamed service",
+    "lat": 20.6551909,
+    "lon": -103.4155566,
+    "is24h": false,
+    "hasTowing": false,
+    "areaLabel": "Guadalajara metro area"
+  },
+  {
+    "id": "osm_way_1414798809",
+    "osm_id": 1414798809,
+    "osm_type": "way",
+    "type": "workshop",
+    "name": "Frenos Únicos Plaza Real",
+    "lat": 20.7396475,
+    "lon": -103.4303877,
     "is24h": false,
     "hasTowing": false,
     "areaLabel": "Guadalajara metro area"
